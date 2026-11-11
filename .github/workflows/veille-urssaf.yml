@@ -1,27 +1,71 @@
 name: Veille barème URSSAF petits déplacements
+
 on:
   schedule:
     - cron: '17 6 * * *'
   workflow_dispatch:
+
 permissions:
   contents: read
   issues: write
+
 jobs:
   controle:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Charger le référentiel A3C
+        uses: actions/checkout@v4
+      - name: Préparer Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Comparer la publication officielle
-        id: verify
+      - name: Contrôler les publications officielles URSSAF
+        id: verification
         continue-on-error: true
         run: python outils/controle_urssaf.py
-      - name: Signaler une anomalie à contrôler
-        if: steps.verify.outcome == 'failure'
+      - name: Archiver les éléments du contrôle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: controle-urssaf-${{ github.run_number }}
+          path: |
+            donnees/resultat-controle.json
+            donnees/proposition-changement.json
+          if-no-files-found: warn
+          retention-days: 60
+      - name: Signaler précisément l'anomalie sans doublon
+        if: steps.verification.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
         run: |
-          gh issue create --title "Contrôle URSSAF requis — $(date -u +%F)" --body "Le contrôle automatique du barème des petits déplacements a échoué ou détecté une évolution. Vérifier la source officielle et le journal de cette exécution avant toute publication." --label "" 2>/dev/null || gh issue create --title "Contrôle URSSAF requis — $(date -u +%F)" --body "Vérifier la source officielle et le journal de cette exécution avant toute publication."
+          python - <<'PY'
+          import json, pathlib, os
+          f = pathlib.Path('donnees/resultat-controle.json')
+          r = json.loads(f.read_text(encoding='utf-8')) if f.exists() else {'statut': 'INCIDENT_TECHNIQUE', 'message': 'Le script a échoué sans produire de résultat.'}
+          labels = {
+            'SOURCE_INACCESSIBLE': 'Source officielle inaccessible',
+            'PUBLICATION_ILLISIBLE': 'Publication officielle illisible',
+            'REFERENTIEL_INVALIDE': 'Référentiel A3C invalide',
+            'EVOLUTION_A_VALIDER': 'Évolution du barème à valider',
+          }
+          statut = r['statut']
+          titre = 'Veille URSSAF — ' + labels.get(statut, 'incident technique')
+          message = r.get('message', '')
+          url = os.environ['GITHUB_SERVER_URL'] + '/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID']
+          corps = f"**Statut :** {statut}\n\n{message}\n\nJournal : {url}\n\n**Aucun montant n'est modifié automatiquement.** Vérifier avant toute publication."
+          pathlib.Path('/tmp/urssaf-issue-title.txt').write_text(titre, encoding='utf-8')
+          pathlib.Path('/tmp/urssaf-issue-body.txt').write_text(corps, encoding='utf-8')
+          PY
+          TITRE="$(cat /tmp/urssaf-issue-title.txt)"
+          if gh issue list --state open --limit 100 --json title --jq '.[].title' | grep -Fxq "$TITRE"; then
+            echo "Une alerte de même nature existe déjà : aucune nouvelle Issue créée."
+          else
+            gh issue create --title "$TITRE" --body-file /tmp/urssaf-issue-body.txt
+          fi
+      - name: Indiquer que la vérification reste incomplète
+        if: steps.verification.outcome == 'failure'
+        run: |
+          echo 'ATTENTION : ce contrôle n’a pas pu attester la conformité du barème URSSAF.'
           exit 1
