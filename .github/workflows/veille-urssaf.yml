@@ -1,0 +1,27 @@
+name: Veille barème URSSAF petits déplacements
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Comparer la publication officielle
+        id: verify
+        continue-on-error: true
+        run: python outils/controle_urssaf.py
+      - name: Signaler une anomalie à contrôler
+        if: steps.verify.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Contrôle URSSAF requis — $(date -u +%F)" --body "Le contrôle automatique du barème des petits déplacements a échoué ou détecté une évolution. Vérifier la source officielle et le journal de cette exécution avant toute publication." --label "" 2>/dev/null || gh issue create --title "Contrôle URSSAF requis — $(date -u +%F)" --body "Vérifier la source officielle et le journal de cette exécution avant toute publication."
+          exit 1
