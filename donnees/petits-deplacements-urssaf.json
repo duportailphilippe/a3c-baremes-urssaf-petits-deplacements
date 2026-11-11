@@ -1,0 +1,111 @@
+{
+  "historique": [
+    {
+      "annee": 2026,
+      "source": "https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/frais-professionnels.html",
+      "tranches": [
+        {
+          "de_km": 5,
+          "a_km": 10,
+          "euros": 3
+        },
+        {
+          "de_km": 10,
+          "a_km": 20,
+          "euros": 6.1
+        },
+        {
+          "de_km": 20,
+          "a_km": 30,
+          "euros": 9.1
+        },
+        {
+          "de_km": 30,
+          "a_km": 40,
+          "euros": 12.1
+        },
+        {
+          "de_km": 40,
+          "a_km": 50,
+          "euros": 15.2
+        },
+        {
+          "de_km": 50,
+          "a_km": 60,
+          "euros": 18.2
+        },
+        {
+          "de_km": 60,
+          "a_km": 70,
+          "euros": 21.2
+        },
+        {
+          "de_km": 70,
+          "a_km": 80,
+          "euros": 24.2
+        },
+        {
+          "de_km": 80,
+          "a_km": 90,
+          "euros": 27.3
+        },
+        {
+          "de_km": 90,
+          "a_km": 100,
+          "euros": 30.3
+        },
+        {
+          "de_km": 100,
+          "a_km": 110,
+          "euros": 33.3
+        },
+        {
+          "de_km": 110,
+          "a_km": 120,
+          "euros": 36.4
+        },
+        {
+          "de_km": 120,
+          "a_km": 130,
+          "euros": 39.4
+        },
+        {
+          "de_km": 130,
+          "a_km": 140,
+          "euros": 42.4
+        },
+        {
+          "de_km": 140,
+          "a_km": 150,
+          "euros": 45.5
+        },
+        {
+          "de_km": 150,
+          "a_km": 160,
+          "euros": 48.5
+        },
+        {
+          "de_km": 160,
+          "a_km": 170,
+          "euros": 51.5
+        },
+        {
+          "de_km": 170,
+          "a_km": 180,
+          "euros": 54.5
+        },
+        {
+          "de_km": 180,
+          "a_km": 190,
+          "euros": 57.6
+        },
+        {
+          "de_km": 190,
+          "a_km": 200,
+          "euros": 60.6
+        }
+      ],
+      "majoration_electrique_pct": 20
+    }
+  ]
+}
